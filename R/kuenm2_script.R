@@ -195,13 +195,13 @@ time_calibration
 # ID of models that were selected
 m$selected_models$ID
 
-# Response curves for model 192
+# Response curves for model 313
 partition_response_curves(calibration_results = m, modelID = 313)
 
 # Save calibration data
-saveRDS(m, "calibration_data.rds")
+saveRDS(m, file.path(my_dir, "calibration_data.rds"))
 # Load calibration data
-m <- readRDS("calibration_data.rds")
+m <- readRDS(file.path(my_dir, "calibration_data.rds"))
 
 #### Fit selected models ####
 ?kuenm2::fit_selected
@@ -215,7 +215,7 @@ fm
 # See names of selected models
 names(fm$Models)
 
-# See models inside Model 35
+# See models inside Model
 names(fm$Models$Model_313)
 
 # Get omission error used to select models and calculate the theshold values
@@ -244,11 +244,18 @@ plot(p$General_consensus)
 # All response curves
 all_response_curves(fm)
 
-# All response curves for model 35 (GAM for variability across replicates)
-all_response_curves(fm, modelID = "Model_35", show_variability = TRUE)
+# Save plot of response curves
+png(filename = file.path(figure_path, "5. All_response_curves.png"), res = 600,
+    units = "in", height = 3, width = 3, pointsize = 6)
+all_response_curves(fm)
+dev.off()
 
-# All response curves for model 35 (add lines for variability across replicates)
-all_response_curves(fm, modelID = "Model_35", show_variability = TRUE,
+
+# All response curves for model (GAM for variability across replicates)
+all_response_curves(fm, modelID = "Model_313", show_variability = TRUE)
+
+# All response curves for model  (add lines for variability across replicates)
+all_response_curves(fm, modelID = "Model_313", show_variability = TRUE,
                     show_lines = TRUE)
 
 # Increase area of extrapolation
@@ -259,14 +266,24 @@ all_response_curves(fm, extrapolation_factor = 2)
 
 #Response curves (products)
 bivariate_response(models = fm, #output of fit_selected
-                   modelID = "Model_35", #Which model?
+                   modelID = "Model_313", #Which model?
                    variable1 = "bio_1", #Variable in x-axys
                    variable2 = "bio_12") #VAriable in y-axis
 
 bivariate_response(models = fm, #output of fit_selected
-                   modelID = "Model_35", #Which model?
+                   modelID = "Model_313", #Which model?
                    variable1 = "bio_7", #Variable in x-axys
                    variable2 = "bio_12") #VAriable in y-axis
+
+# Save plot of response curves
+png(filename = file.path(figure_path, "6. Bivariate response.png"), res = 600,
+    units = "in", height = 3, width = 3.2, pointsize = 6)
+bivariate_response(models = fm, #output of fit_selected
+                   modelID = "Model_313", #Which model?
+                   variable1 = "bio_1", #Variable in x-axys
+                   variable2 = "bio_12") #VAriable in y-axis
+dev.off()
+
 
 
 #### Variable importance ####
@@ -277,6 +294,11 @@ imp_maxnet <- variable_importance(models = fm) #output of fit_selected
 # Plot using enmpa package
 enmpa::plot_importance(imp_maxnet)
 
+# Save plot of variable importance
+png(filename = file.path(figure_path, "7. Variable_importance.png"), res = 600,
+    units = "in", height = 2.8, width = 3.2, pointsize = 6)
+enmpa::plot_importance(imp_maxnet)
+dev.off()
 
 #### Evaluation with independent data ####
 # Import independent records (from Neotropic Tree)
@@ -311,10 +333,11 @@ new_pts$predictions <- round(res_ind$predictions$continuous$General_consensus.me
 mapview(new_pts, zcol = "predictions")
 
 # Save the data:
-saveRDS(fm, "fitted_models.rds")
+saveRDS(fm,
+        file.path(my_dir, "fitted_models.rds"))
 
 # Import data
-fm <- readRDS("fitted_models.rds")
+fm <- readRDS(file.path(my_dir, "fitted_models.rds"))
 
 #### Binarize predictions ####
 # Get omission error used to select models and calculate the thesholds
@@ -387,7 +410,7 @@ dir.create(out_dir_future)
 ?organize_future_worldclim
 organize_future_worldclim(input_dir = in_dir, #path to the folder containing the variables
                           output_dir = out_dir_future, #folder where the organized data will be saved
-                          overwrite = TRUE)
+                          overwrite = TRUE, static_variables = var$SoilType)
 #Check the folder
 list.dirs(out_dir_future)
 fs::dir_tree(out_dir_future) #Requires fs package
@@ -457,6 +480,12 @@ plot(changes_col$Results_by_gcm) #SpatRaster with the computed changes for each 
 plot(changes_col$Results_by_change$`Future_2041-2060_ssp126`) #List containing the SpatRaster with each computed change for each GCM
 plot(changes_col$Summary_changes) #SpatRaster with the general summary
 
+# Save summary changes
+png(filename = file.path(figure_path, "8. Summary_changes.png"), res = 600,
+    units = "in", height = 3, width = 4, pointsize = 7)
+plot(changes_col$Summary_changes) #SpatRaster with the general summary
+dev.off()
+
 #### Binarize changes based on the agreement among GCMs ####
 ?binarize_changes
 # Areas of suitability (stable suitable + gain)
@@ -503,6 +532,11 @@ terra::plot(v$`Future_2081-2100_ssp126`, range = c(0, 0.25))
 # Variability for Future_2081-2100_ssp585
 terra::plot(v$`Future_2081-2100_ssp585`, range = c(0, 0.1))
 
+# Save one of the variability results
+png(filename = file.path(figure_path, "9. Variability_Future_2081-2100_ssp585.png"), res = 600,
+    units = "in", height = 3, width = 3.2, pointsize = 6)
+terra::plot(v$`Future_2081-2100_ssp585`, range = c(0, 0.1))
+dev.off()
 
 #### Analysis of extrapolation risks using the MOP metric ####
 ?projection_mop
@@ -559,7 +593,19 @@ terra::plot(mop_ssp585_2100$simple)
 terra::plot(mop_ssp585_2100$towards_high_end$`Future_2081-2100_ssp585_ACCESS-CM2`)
 
 # Combined
+
+
+# Sabe plots mops
+png(filename = file.path(figure_path, "10. Mop_distance.png"), res = 600,
+    units = "in", height = 3, width = 3.5, pointsize = 5.9)
+terra::plot(mop_ssp585_2100$distances)
+dev.off()
+
+png(filename = file.path(figure_path, "10. Mop_combined_high.png"), res = 600,
+    units = "in", height = 3, width = 3.5, pointsize = 5.9)
 terra::plot(mop_ssp585_2100$towards_high_combined$`Future_2081-2100_ssp585_ACCESS-CM2`)
+dev.off()
+
 
 # However, when examining the response curves, we find that the only variable showing real extrapolation is bio_7
 all_response_curves(fm)
